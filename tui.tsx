@@ -2,6 +2,7 @@
 import { Plugin } from "@opencode/plugin/tui"
 import { createSignal, For, Show } from "solid-js"
 import { spawn } from "node:child_process"
+import { MouseButton } from "@opentui/core"
 
 type Item = { command: string; title: string }
 
@@ -21,7 +22,11 @@ function parseItems(value: unknown): Item[] {
 export default Plugin.define({
   id: "opencode-open-with",
   setup(context) {
-    const items = parseItems(context.options.items)
+    // The item list lives in plugin storage; the cli.json `items` option seeds it
+    // and is what "Reset" restores. Right-clicking a row edits the stored list.
+    const [settings, updateSettings] = context.storage.store("items", {
+      initial: { list: parseItems(context.options.items) },
+    })
     const [hovered, setHovered] = createSignal<string>()
 
     function launch(item: Item) {
@@ -38,17 +43,65 @@ export default Plugin.define({
       child.unref()
     }
 
+    async function addItem() {
+      const command = await context.ui.dialog.prompt({ title: "Command", placeholder: "codium" })
+      if (!command) return
+      const fallback = `Open with ${command}`
+      const title = await context.ui.dialog.prompt({ title: "Label", value: fallback })
+      if (title === undefined) return
+      await updateSettings((draft) => {
+        draft.list.push({ command, title: title || fallback })
+      })
+    }
+
+    async function configure() {
+      const choice = await context.ui.dialog.select({
+        title: "Open with",
+        options: [
+          { title: "Add app…", value: "add", description: "command and label" },
+          ...settings.list.map((item, index) => ({
+            title: item.title,
+            value: `remove:${index}`,
+            description: `remove — ${item.command}`,
+          })),
+          { title: "Reset", value: "reset", description: "restore the cli.json/default items" },
+        ],
+      })
+      if (choice === undefined) return
+      if (choice === "add") return addItem()
+      if (choice === "reset") {
+        await updateSettings((draft) => {
+          draft.list = parseItems(context.options.items)
+        })
+        return
+      }
+      const index = Number(choice.slice("remove:".length))
+      const item = settings.list[index]
+      if (!item) return
+      const confirmed = await context.ui.dialog.confirm({ title: "Remove", message: item.title })
+      if (!confirmed) return
+      await updateSettings((draft) => {
+        draft.list.splice(index, 1)
+      })
+    }
+
     context.ui.slot({
       prepend: "sidebar.footer",
       render: () => (
         <Show when={context.location?.directory}>
           <box flexDirection="column">
-            <For each={items}>
+            <For each={settings.list}>
               {(item) => (
                 <box
                   onMouseOver={() => setHovered(item.title)}
                   onMouseOut={() => setHovered(undefined)}
-                  onMouseUp={() => launch(item)}
+                  onMouseUp={(event) => {
+                    if (event.button === MouseButton.RIGHT) {
+                      configure()
+                      return
+                    }
+                    if (event.button === MouseButton.LEFT) launch(item)
+                  }}
                 >
                   <text fg={hovered() === item.title ? context.theme.text.base : context.theme.text.muted}>
                     {item.title}

@@ -2,7 +2,7 @@
 
 An [OpenCode](https://opencode.ai) CLI (TUI) plugin that adds one or more **Open with** actions to the session sidebar footer, right above the working directory path.
 
-Clicking the row opens the session's working directory in VSCodium (`codium <directory>`).
+Clicking the row opens the session's working directory in VSCodium (`codium <directory>`). Right-clicking a row opens a menu to add, remove, or reset entries without editing any file.
 
 ## Install
 
@@ -46,6 +46,16 @@ The defaults are fine for VSCodium. To override them, also list the plugin in `~
 | `items` | `[{ "command": "codium", "title": "Open with VSCodium" }]` | Clickable rows rendered above the directory path, in order. Each `command` is launched with the working directory as its only argument; `title` defaults to `command`. |
 
 Any editor or tool with a CLI (`code`, `zed`, `cursor`, `xdg-open`, ...) works the same way. Malformed entries are skipped; an empty or invalid `items` list falls back to the default row.
+
+Configured `items` seed the list on first run. After that the list lives in the plugin's durable storage (the mechanism OpenCode documents for plugin state) and is edited from the TUI. "Reset" in the menu restores the `cli.json`/default items.
+
+### Configure from the sidebar
+
+Right-click any **Open with** row:
+
+- **Add app…** — prompts for a command and a label, then adds the row immediately (no restart).
+- **<label>** — removes that entry after a confirmation.
+- **Reset** — restores the `items` from `cli.json`, or the default VSCodium row.
 
 ## Requirements
 
