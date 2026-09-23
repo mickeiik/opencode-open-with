@@ -11,7 +11,7 @@ export default Plugin.define({
     const [hovered, setHovered] = createSignal(false)
 
     context.ui.slot({
-      append: "sidebar.footer",
+      prepend: "sidebar.footer",
       render: () => (
         <Show when={context.location?.directory}>
           <box

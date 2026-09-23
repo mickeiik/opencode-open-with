@@ -1,6 +1,6 @@
 # opencode-open-with
 
-An [OpenCode](https://opencode.ai) CLI (TUI) plugin that adds an **Open with VSCodium** action to the session sidebar footer, right under the working directory path.
+An [OpenCode](https://opencode.ai) CLI (TUI) plugin that adds an **Open with VSCodium** action to the session sidebar footer, right above the working directory path.
 
 Clicking the row opens the session's working directory in VSCodium (`codium <directory>`).
 
@@ -47,11 +47,11 @@ Any editor with a CLI (`code`, `zed`, `cursor`, ...) works the same way.
 
 ## How it works
 
-The plugin claims the `sidebar.footer` slot and appends a clickable row. Clicking it spawns the configured command detached from the TUI process.
+The plugin claims the `sidebar.footer` slot and prepends a clickable row above the directory path. Clicking it spawns the configured command detached from the TUI process.
 
 ## Notes
 
-- OpenCode's built-in "Working directory" menu (Copy path / Open folder / Workspaces) is not extensible through the plugin API, so this plugin adds its own row under the directory path instead of a menu entry.
+- OpenCode's built-in "Working directory" menu (Copy path / Open folder / Workspaces) is not extensible through the plugin API, so this plugin adds its own row above the directory path instead of a menu entry.
 - Installing the package through `cli.json` as a git dependency (`"git+https://github.com/mickeiik/opencode-open-with.git"`) resolves and downloads, but the host CLI (2.0.12) cannot load JSX plugins from `node_modules`: they are compiled outside OpenTUI's Solid transform and the generated JSX runtime import does not resolve. Local plugins, as installed above, are transformed correctly.
 - To remove the plugin, delete `~/.config/opencode/plugins/open-with`.
 
