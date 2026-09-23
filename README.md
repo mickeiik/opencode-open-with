@@ -12,7 +12,7 @@ Clone the repo into OpenCode's global plugins directory:
 git clone https://github.com/mickeiik/opencode-open-with.git ~/.config/opencode/plugins/open-with
 ```
 
-Restart OpenCode. The row appears beneath the working directory path at the bottom of the session sidebar.
+Restart OpenCode. The rows appear above the working directory path at the bottom of the session sidebar.
 
 To update:
 

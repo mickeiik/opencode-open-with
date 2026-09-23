@@ -27,7 +27,7 @@ export default Plugin.define({
     const [settings, updateSettings] = context.storage.store("items", {
       initial: { list: parseItems(context.options.items) },
     })
-    const [hovered, setHovered] = createSignal<string>()
+    const [hovered, setHovered] = createSignal<number>()
 
     function launch(item: Item) {
       const directory = context.location?.directory
@@ -55,34 +55,44 @@ export default Plugin.define({
     }
 
     async function configure() {
+      const listed = [...settings.list]
       const choice = await context.ui.dialog.select({
         title: "Open with",
         options: [
-          { title: "Add app…", value: "add", description: "command and label" },
-          ...settings.list.map((item, index) => ({
+          { title: "Add app…", value: -1, description: "command and label" },
+          ...listed.map((item, index) => ({
             title: item.title,
-            value: `remove:${index}`,
+            value: index,
             description: `remove — ${item.command}`,
           })),
-          { title: "Reset", value: "reset", description: "restore the cli.json/default items" },
+          { title: "Reset", value: -2, description: "restore the cli.json/default items" },
         ],
       })
       if (choice === undefined) return
-      if (choice === "add") return addItem()
-      if (choice === "reset") {
+      if (choice === -1) return addItem()
+      if (choice === -2) {
         await updateSettings((draft) => {
           draft.list = parseItems(context.options.items)
         })
         return
       }
-      const index = Number(choice.slice("remove:".length))
-      const item = settings.list[index]
+      const item = listed[choice]
       if (!item) return
       const confirmed = await context.ui.dialog.confirm({ title: "Remove", message: item.title })
       if (!confirmed) return
+      // Match by content, not position: another TUI may have edited the list meanwhile.
       await updateSettings((draft) => {
-        draft.list.splice(index, 1)
+        const match = draft.list.findIndex(
+          (entry) => entry.command === item.command && entry.title === item.title,
+        )
+        if (match >= 0) draft.list.splice(match, 1)
       })
+    }
+
+    function openMenu() {
+      void configure().catch((error) =>
+        context.ui.toast.show({ title: "Open with", message: String(error), variant: "error" }),
+      )
     }
 
     context.ui.slot({
@@ -91,24 +101,26 @@ export default Plugin.define({
         <Show when={context.location?.directory}>
           <box flexDirection="column">
             <For each={settings.list}>
-              {(item) => (
+              {(item, index) => (
                 <box
-                  onMouseOver={() => setHovered(item.title)}
+                  onMouseOver={() => setHovered(index())}
                   onMouseOut={() => setHovered(undefined)}
                   onMouseUp={(event) => {
-                    if (event.button === MouseButton.RIGHT) {
-                      configure()
-                      return
-                    }
+                    if (event.button === MouseButton.RIGHT) return openMenu()
                     if (event.button === MouseButton.LEFT) launch(item)
                   }}
                 >
-                  <text fg={hovered() === item.title ? context.theme.text.base : context.theme.text.muted}>
+                  <text fg={hovered() === index() ? context.theme.text.base : context.theme.text.muted}>
                     {item.title}
                   </text>
                 </box>
               )}
             </For>
+            <Show when={settings.list.length === 0}>
+              <box onMouseUp={() => openMenu()}>
+                <text fg={context.theme.text.muted}>Add app…</text>
+              </box>
+            </Show>
           </box>
         </Show>
       ),
