@@ -6,23 +6,32 @@ Clicking the row opens the session's working directory in VSCodium (`codium <dir
 
 ## Install
 
-Add the plugin to `~/.config/opencode/cli.json`:
+Clone the repo into OpenCode's global plugins directory:
+
+```sh
+git clone https://github.com/mickeiik/opencode-open-with.git ~/.config/opencode/plugins/open-with
+```
+
+Restart OpenCode. The row appears beneath the working directory path at the bottom of the session sidebar.
+
+To update:
+
+```sh
+git -C ~/.config/opencode/plugins/open-with pull
+```
+
+## Options
+
+The defaults are fine for VSCodium. To override them, also list the plugin in `~/.config/opencode/cli.json`:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/v2/cli.json",
   "plugins": [
-    {
-      "package": "git+https://github.com/mickeiik/opencode-open-with.git",
-      "options": { "command": "codium", "title": "Open with VSCodium" }
-    }
+    { "package": "./plugins/open-with", "options": { "command": "codium", "title": "Open with VSCodium" } }
   ]
 }
 ```
-
-Restart OpenCode. OpenCode installs the plugin from GitHub into its plugin cache on first load, and the row appears beneath the working directory path at the bottom of the sidebar.
-
-## Options
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -33,7 +42,7 @@ Any editor with a CLI (`code`, `zed`, `cursor`, ...) works the same way.
 
 ## Requirements
 
-- OpenCode 2.0.x with CLI plugin support (`@opencode/plugin/tui`).
+- OpenCode 2.0.x with CLI plugin support.
 - The configured command available on `PATH`.
 
 ## How it works
@@ -43,14 +52,13 @@ The plugin claims the `sidebar.footer` slot and appends a clickable row. Clickin
 ## Notes
 
 - OpenCode's built-in "Working directory" menu (Copy path / Open folder / Workspaces) is not extensible through the plugin API, so this plugin adds its own row under the directory path instead of a menu entry.
-- To remove the plugin, delete the entry from `cli.json`.
+- Installing the package through `cli.json` as a git dependency (`"git+https://github.com/mickeiik/opencode-open-with.git"`) resolves and downloads, but the host CLI (2.0.12) cannot load JSX plugins from `node_modules`: they are compiled outside OpenTUI's Solid transform and the generated JSX runtime import does not resolve. Local plugins, as installed above, are transformed correctly.
+- To remove the plugin, delete `~/.config/opencode/plugins/open-with`.
 
 ## Development
 
-`src/tui.tsx` is the entire plugin. Syntax-check it with:
+`tui.tsx` is the entire plugin. Syntax-check it with:
 
 ```sh
-bun build src/tui.tsx --target=bun \
-  --external '@opencode/plugin/tui' --external solid-js --external '@opentui/solid' \
-  --outfile /tmp/open-with-check.js
+bun build tui.tsx --target=bun --external '@opencode/plugin/tui' --external solid-js --external '@opentui/solid' --outfile /tmp/open-with-check.js
 ```

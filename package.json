@@ -11,9 +11,9 @@
     "url": "git+https://github.com/mickeiik/opencode-open-with.git"
   },
   "exports": {
-    "./tui": "./src/tui.tsx"
+    "./tui": "./tui.tsx"
   },
-  "files": ["src"],
+  "files": ["tui.tsx"],
   "peerDependencies": {
     "@opentui/core": ">=0.5.8",
     "@opentui/solid": ">=0.5.8",
