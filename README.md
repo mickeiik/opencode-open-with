@@ -1,6 +1,6 @@
 # opencode-open-with
 
-An [OpenCode](https://opencode.ai) CLI (TUI) plugin that adds an **Open with VSCodium** action to the session sidebar footer, right above the working directory path.
+An [OpenCode](https://opencode.ai) CLI (TUI) plugin that adds one or more **Open with** actions to the session sidebar footer, right above the working directory path.
 
 Clicking the row opens the session's working directory in VSCodium (`codium <directory>`).
 
@@ -28,17 +28,24 @@ The defaults are fine for VSCodium. To override them, also list the plugin in `~
 {
   "$schema": "https://opencode.ai/v2/cli.json",
   "plugins": [
-    { "package": "./plugins/open-with", "options": { "command": "codium", "title": "Open with VSCodium" } }
+    {
+      "package": "./plugins/open-with",
+      "options": {
+        "items": [
+          { "command": "codium", "title": "Open with VSCodium" },
+          { "command": "zed", "title": "Open with Zed" }
+        ]
+      }
+    }
   ]
 }
 ```
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `command` | `codium` | Executable to launch with the working directory as its only argument. |
-| `title` | `Open with VSCodium` | Label shown in the sidebar. |
+| `items` | `[{ "command": "codium", "title": "Open with VSCodium" }]` | Clickable rows rendered above the directory path, in order. Each `command` is launched with the working directory as its only argument; `title` defaults to `command`. |
 
-Any editor with a CLI (`code`, `zed`, `cursor`, ...) works the same way.
+Any editor or tool with a CLI (`code`, `zed`, `cursor`, `xdg-open`, ...) works the same way. Malformed entries are skipped; an empty or invalid `items` list falls back to the default row.
 
 ## Requirements
 
@@ -47,7 +54,7 @@ Any editor with a CLI (`code`, `zed`, `cursor`, ...) works the same way.
 
 ## How it works
 
-The plugin claims the `sidebar.footer` slot and prepends a clickable row above the directory path. Clicking it spawns the configured command detached from the TUI process.
+The plugin claims the `sidebar.footer` slot and prepends one clickable row per configured item above the directory path. Clicking a row spawns its command detached from the TUI process.
 
 ## Notes
 
