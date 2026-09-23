@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "opencode-open-with",
+  "version": "0.1.0",
+  "description": "OpenCode TUI plugin: open the current working directory in VSCodium (or any editor CLI) from the session sidebar.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["opencode", "opencode-plugin", "tui", "vscodium"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mickeiik/opencode-open-with.git"
+  },
+  "exports": {
+    "./tui": "./src/tui.tsx"
+  },
+  "files": ["src"],
+  "peerDependencies": {
+    "@opentui/core": ">=0.5.8",
+    "@opentui/solid": ">=0.5.8",
+    "solid-js": ">=1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentui/core": { "optional": true },
+    "@opentui/solid": { "optional": true },
+    "solid-js": { "optional": true }
+  }
+}
