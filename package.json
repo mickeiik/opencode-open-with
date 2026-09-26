@@ -1,19 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "opencode-open-with",
-  "version": "0.1.0",
-  "description": "OpenCode TUI plugin: open the current working directory in VSCodium (or any editor CLI) from the session sidebar.",
+  "name": "opencode-tui-extras",
+  "version": "0.2.0",
+  "description": "OpenCode TUI plugin with opt-in extras: launch apps from the session sidebar (openWith) and a clickable sidebar toggle (sidebarToggle).",
   "type": "module",
   "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", "tui", "vscodium"],
+  "keywords": ["opencode", "opencode-plugin", "tui", "sidebar"],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mickeiik/opencode-open-with.git"
+    "url": "git+https://github.com/mickeiik/opencode-tui-extras.git"
   },
   "exports": {
     "./tui": "./tui.tsx"
   },
-  "files": ["tui.tsx"],
+  "files": ["tui.tsx", "src"],
   "peerDependencies": {
     "@opentui/core": ">=0.5.8",
     "@opentui/solid": ">=0.5.8",
@@ -23,5 +23,14 @@
     "@opentui/core": { "optional": true },
     "@opentui/solid": { "optional": true },
     "solid-js": { "optional": true }
+  },
+  "devDependencies": {
+    "@opentui/core": "0.5.12",
+    "@opentui/solid": "0.5.12",
+    "solid-js": "1.9.12"
+  },
+  "scripts": {
+    "test": "bun test",
+    "check": "bun build tui.tsx --target=bun --external '@opencode/plugin/tui' --external solid-js --external '@opentui/solid' --external '@opentui/core' --outfile /tmp/tui-extras-check.js"
   }
 }

@@ -1,81 +1,68 @@
-# opencode-open-with
+# opencode-tui-extras
 
-An [OpenCode](https://opencode.ai) CLI (TUI) plugin that adds one or more **Open with** actions to the session sidebar footer, right above the working directory path.
+Two opt-in extras for the [OpenCode](https://opencode.ai) CLI (TUI):
 
-Clicking the row opens the session's working directory in VSCodium (`codium <directory>`). Right-clicking a row opens a menu to add, remove, or reset entries without editing any file.
+- **openWith** — one or more clickable rows in the session sidebar footer, above the working directory path. Clicking a row launches its command with the session's working directory as the only argument.
+- **sidebarToggle** — a clickable `◨ hide sidebar` / `◨ show sidebar` button in the prompt footer, a mouse affordance for the built-in `<leader>b` binding.
+
+**Everything is off until you enable it in `cli.json`.** The plugin loads but registers nothing and shows nothing when no options are configured.
 
 ## Install
 
-Clone the repo into OpenCode's global plugins directory:
+Clone into OpenCode's global plugins directory (or symlink it there):
 
 ```sh
-git clone https://github.com/mickeiik/opencode-open-with.git ~/.config/opencode/plugins/open-with
+git clone https://github.com/mickeiik/opencode-tui-extras.git ~/.config/opencode/plugins/tui-extras
 ```
 
-Restart OpenCode. The rows appear above the working directory path at the bottom of the session sidebar.
+Restart OpenCode once. After that, feature toggles apply live when `cli.json` changes — no restart.
 
-To update:
+## Configuration (required)
 
-```sh
-git -C ~/.config/opencode/plugins/open-with pull
-```
-
-## Options
-
-The defaults are fine for VSCodium. To override them, also list the plugin in `~/.config/opencode/cli.json`:
+Without a `cli.json` entry there are no options, so nothing renders. Add the plugin to `~/.config/opencode/cli.json`:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/v2/cli.json",
   "plugins": [
     {
-      "package": "./plugins/open-with",
+      "package": "./plugins/tui-extras",
       "options": {
-        "items": [
+        "openWith": [
           { "command": "codium", "title": "Open with VSCodium" },
           { "command": "zed", "title": "Open with Zed" }
-        ]
+        ],
+        "sidebarToggle": true
       }
     }
   ]
 }
 ```
 
+## Options
+
 | Option | Default | Description |
 | --- | --- | --- |
-| `items` | `[{ "command": "codium", "title": "Open with VSCodium" }]` | Clickable rows rendered above the directory path, in order. Each `command` is launched with the working directory as its only argument; `title` defaults to `command`. |
+| `openWith` | disabled | Array of `{ command, title? }`. Each entry renders one sidebar row; clicking it runs `command <working directory>`. `title` defaults to `command`. An empty array, or an array with no valid entry, disables the feature. Malformed entries (non-object, missing or non-string `command`) are skipped. |
+| `sidebarToggle` | disabled | `true` renders the sidebar toggle button in the prompt footer. `false` or absent disables it. |
 
-Any editor or tool with a CLI (`code`, `zed`, `cursor`, `xdg-open`, ...) works the same way. Malformed entries are skipped; an empty or invalid `items` list falls back to the default row.
+Unknown option keys produce one warning toast listing them, e.g. `Unknown options: openwith — configure features in cli.json`. Option keys are case-sensitive.
 
-Configured `items` seed the list on first run. After that the list lives in the plugin's durable storage (the mechanism OpenCode documents for plugin state) and is edited from the TUI. "Reset" in the menu restores the `cli.json`/default items.
-
-### Configure from the sidebar
-
-Right-click any **Open with** row:
-
-- **Add app…** — prompts for a command and a label, then adds the row immediately (no restart).
-- **<label>** — removes that entry after a confirmation.
-- **Reset** — restores the `items` from `cli.json`, or the default VSCodium row.
-
-## Requirements
-
-- OpenCode 2.0.x with CLI plugin support.
-- The configured command available on `PATH`.
-
-## How it works
-
-The plugin claims the `sidebar.footer` slot and prepends one clickable row per configured item above the directory path. Clicking a row spawns its command detached from the TUI process.
+Any editor or tool with a CLI (`code`, `zed`, `cursor`, `xdg-open`, ...) works with `openWith`.
 
 ## Notes
 
-- OpenCode's built-in "Working directory" menu (Copy path / Open folder / Workspaces) is not extensible through the plugin API, so this plugin adds its own row above the directory path instead of a menu entry.
-- Installing the package through `cli.json` as a git dependency (`"git+https://github.com/mickeiik/opencode-open-with.git"`) resolves and downloads, but the host CLI (2.0.12) cannot load JSX plugins from `node_modules`: they are compiled outside OpenTUI's Solid transform and the generated JSX runtime import does not resolve. Local plugins, as installed above, are transformed correctly.
-- To remove the plugin, delete `~/.config/opencode/plugins/open-with`.
+- `sidebarToggle` duplicates the built-in `<leader>b` keybinding; it only adds a mouse target. It is hidden for subagent sessions, where the sidebar cannot show.
+- The built-in "Working directory" menu (Copy path / Open folder / Workspaces) is not extensible through the plugin API, so `openWith` adds its own rows above the directory path instead of a menu entry.
+- Installing the package through `cli.json` as a git dependency resolves and downloads, but the host CLI cannot load JSX plugins from `node_modules`: they are compiled outside OpenTUI's Solid transform and the generated JSX runtime import does not resolve. Local plugins, as installed above, are transformed correctly.
+- To remove the plugin, delete `~/.config/opencode/plugins/tui-extras` and its `cli.json` entry.
 
 ## Development
 
-`tui.tsx` is the entire plugin. Syntax-check it with:
-
 ```sh
-bun build tui.tsx --target=bun --external '@opencode/plugin/tui' --external solid-js --external '@opentui/solid' --outfile /tmp/open-with-check.js
+bun install
+bun test
+bun run check
 ```
+
+`tui.tsx` is the entry point; the features live in `src/` and are unit-tested with `@opentui/solid`'s `testRender`.
