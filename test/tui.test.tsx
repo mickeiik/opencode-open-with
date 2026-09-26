@@ -5,7 +5,7 @@ import { rm } from "node:fs/promises"
 import { randomUUID } from "node:crypto"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { RGBA } from "@opentui/core"
+import { MouseButton, RGBA } from "@opentui/core"
 import { testRender } from "@opentui/solid"
 import type { Context } from "@opencode/plugin/tui/context"
 import type { JSX } from "solid-js"
@@ -98,6 +98,24 @@ test("openWith renders a row and a left click launches the command", async () =>
   }
 })
 
+test("openWith ignores a right click (no launch, no toast)", async () => {
+  const directory = join(tmpdir(), `tui-extras-${randomUUID()}`)
+  const f = fake({ directory })
+  setup(f.context, { openWith: [{ command: "mkdir", title: "Make folder" }] })
+  const claim = f.claims.find((item) => item.prepend === "sidebar.footer")!
+  const app = await testRender(() => claim.render({ sessionID: "session" }), { width: 40, height: 4 })
+
+  try {
+    await app.renderOnce()
+    await app.mockMouse.click(1, 0, MouseButton.RIGHT)
+    expect(f.toasts).toEqual([])
+    expect(existsSync(directory)).toBe(false)
+  } finally {
+    app.renderer.destroy()
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
 test("openWith reports a launch failure as an error toast", async () => {
   const f = fake({ directory: join(tmpdir(), `tui-extras-${randomUUID()}`) })
   setup(f.context, { openWith: [{ command: "definitely-not-a-real-binary-xyz", title: "Nope" }] })
@@ -139,6 +157,21 @@ test("sidebar toggle label follows the built-in command title and dispatches on 
 
     await app.mockMouse.click(1, 0)
     expect(f.dispatched).toEqual(["session.sidebar.toggle"])
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("sidebar toggle ignores a right click", async () => {
+  const f = fake({ sessions: { session: {} } })
+  setup(f.context, { sidebarToggle: true })
+  const claim = f.claims.find((item) => item.append === "prompt.footer")!
+  const app = await testRender(() => claim.render({ sessionID: "session" }), { width: 40, height: 2 })
+
+  try {
+    await app.renderOnce()
+    await app.mockMouse.click(1, 0, MouseButton.RIGHT)
+    expect(f.dispatched).toEqual([])
   } finally {
     app.renderer.destroy()
   }

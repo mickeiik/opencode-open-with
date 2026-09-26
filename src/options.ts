@@ -22,6 +22,9 @@ function parseItems(value: unknown): Item[] {
     if (typeof entry !== "object" || entry === null) return []
     const item = entry as { command?: unknown; title?: unknown }
     if (typeof item.command !== "string") return []
-    return [{ command: item.command, title: typeof item.title === "string" ? item.title : item.command }]
+    const command = item.command.trim()
+    if (!command) return []
+    const title = typeof item.title === "string" ? item.title.trim() : ""
+    return [{ command, title: title || command }]
   })
 }

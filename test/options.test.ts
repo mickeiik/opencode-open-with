@@ -29,6 +29,18 @@ test("empty or non-array openWith is disabled", () => {
   expect(parseOptions({ openWith: "codium" }).openWith).toEqual([])
 })
 
+test("blank commands are skipped", () => {
+  expect(parseOptions({ openWith: [{ command: "" }] }).openWith).toEqual([])
+  expect(parseOptions({ openWith: [{ command: "   " }] }).openWith).toEqual([])
+})
+
+test("command and title are trimmed", () => {
+  expect(parseOptions({ openWith: [{ command: " codium " }] }).openWith).toEqual([{ command: "codium", title: "codium" }])
+  expect(parseOptions({ openWith: [{ command: "codium", title: "  " }] }).openWith).toEqual([{ command: "codium", title: "codium" }])
+  expect(parseOptions({ openWith: [{ command: "codium", title: "" }] }).openWith).toEqual([{ command: "codium", title: "codium" }])
+  expect(parseOptions({ openWith: [{ command: "codium", title: " Open " }] }).openWith).toEqual([{ command: "codium", title: "Open" }])
+})
+
 test("sidebarToggle is only enabled by true", () => {
   expect(parseOptions({ sidebarToggle: true }).sidebarToggle).toBe(true)
   expect(parseOptions({ sidebarToggle: false }).sidebarToggle).toBe(false)
